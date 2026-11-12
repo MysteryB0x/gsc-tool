@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Accounts, workspaces (teams), plans, credits and the audit log — the same model as WhoCitedMe,
- * so the two apps can later share one core package.
+ * Accounts, workspaces (teams), plans, credits and the audit log.
  */
 return new class extends Migration
 {

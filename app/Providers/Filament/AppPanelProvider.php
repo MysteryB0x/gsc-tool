@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\App\Pages\Dashboard;
 use App\Filament\App\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
+use App\Support\TwoFactor;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -63,6 +64,8 @@ class AppPanelProvider extends PanelProvider
             ->authMiddleware([Authenticate::class]);
 
         // Sign-ups only when they're switched on (GSCT_REGISTRATION=true): until then it's the owner's tool.
+        $panel = TwoFactor::configure($panel);
+
         return config('gsctool.registration') ? $panel->registration() : $panel;
     }
 }

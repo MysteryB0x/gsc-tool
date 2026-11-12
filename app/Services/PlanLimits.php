@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Team;
 
-/** Every plan limit, enforced server-side (same place as in WhoCitedMe). null = unlimited. */
+/** Every plan limit, enforced server-side. null = unlimited. */
 class PlanLimits
 {
     public function maxProperties(Team $team): ?int

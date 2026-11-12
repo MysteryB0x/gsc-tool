@@ -70,6 +70,8 @@ BIGQUERY_LOCATION=EU
 GSCT_REGISTRATION=false
 ```
 
+Two-factor login: the admin panel requires an authenticator app by default (`TWO_FACTOR_ADMIN=required`); on first login it asks you to scan a QR code and gives recovery codes. Keep those somewhere safe.
+
 Then:
 
 ```bash

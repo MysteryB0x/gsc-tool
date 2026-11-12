@@ -1,6 +1,6 @@
 # GSC Tool — notes for working on this repo
 
-Search Console analytics on BigQuery. Laravel 13 + Filament 5, MariaDB in production (SQLite locally and in tests). Built to run light on shared hosting (Vimexx/DirectAdmin): no Redis, database queue/cache/session, cron-driven. Same account model as WhoCitedMe (users, teams, plans, credit ledger) so both can later share one core package.
+Search Console analytics on BigQuery. Laravel 13 + Filament 5, MariaDB in production (SQLite locally and in tests). Built to run light on shared hosting (Vimexx/DirectAdmin): no Redis, database queue/cache/session, cron-driven. Stand-alone: its own code and its own database. It borrows proven patterns from WhoCitedMe (accounts, plans, credit ledger, service-account client, two-factor login) as copied code, never as a shared package or shared data.
 
 The name is configuration: `APP_NAME` / `GSCT_NAME` in `.env` (`config/gsctool.php`). Never hardcode it.
 

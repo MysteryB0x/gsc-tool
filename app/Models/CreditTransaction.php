@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** One line of the credit ledger. Creating it moves the team's balance (same as WhoCitedMe). */
+/** One line of the credit ledger. Creating it moves the team's balance. */
 class CreditTransaction extends Model
 {
     protected $guarded = [];

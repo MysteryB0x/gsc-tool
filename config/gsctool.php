@@ -25,6 +25,14 @@ return [
 
     'timezone' => env('GSCT_TIMEZONE', 'Europe/Amsterdam'),
 
+    // Two-factor login (App\Support\TwoFactor). Admin defaults to required: it sees every workspace's data.
+    'two_factor' => [
+        'mode' => env('TWO_FACTOR', 'optional'),
+        'admin' => env('TWO_FACTOR_ADMIN', 'required'),
+        'methods' => env('TWO_FACTOR_METHODS', 'app,email'),
+        'admin_methods' => env('TWO_FACTOR_ADMIN_METHODS', 'app'),
+    ],
+
     'google' => [
         // Service-account key file (JSON), stored outside the web root. Relative paths are read from the app folder.
         'credentials' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),

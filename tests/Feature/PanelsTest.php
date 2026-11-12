@@ -28,6 +28,11 @@ class PanelsTest extends TestCase
     public function test_admin_pages_render_and_are_admin_only(): void
     {
         [$user] = $this->workspace('owner');
+
+        // Admin needs two-factor login set up first (TWO_FACTOR_ADMIN=required by default).
+        $this->actingAs($user)->get('/admin/users')->assertRedirect();
+        $user->forceFill(['app_authentication_secret' => 'JBSWY3DPEHPK3PXP'])->save();
+
         foreach (['/admin', '/admin/users', '/admin/teams', '/admin/plans', '/admin/bq-queries'] as $path) {
             $this->actingAs($user)->get($path)->assertOk();
         }
