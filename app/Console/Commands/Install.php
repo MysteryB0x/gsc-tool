@@ -33,6 +33,7 @@ class Install extends Command
 
         if (! $user->teams()->exists()) {
             $team = $onboarding->createTeam($user, $this->option('workspace') ?: text('Workspace name', default: config('gsctool.name')));
+            $team->forceFill(['uses_app_account' => true])->save();   // your own workspace reads with the app's account
             $this->info("Workspace \"{$team->name}\" created on the {$team->plan?->name} plan.");
         }
 

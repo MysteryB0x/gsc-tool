@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Credits\Credits;
+use App\Google\WorkspaceAccounts;
+use App\Jobs\CreateWorkspaceAccount;
 use App\Models\Plan;
 use App\Models\Team;
 use App\Models\User;
@@ -23,6 +25,9 @@ class TeamOnboarding
                 'trial_ends_at' => $plan?->trial_days ? now()->addDays($plan->trial_days) : null,
             ]);
             $team->users()->attach($owner, ['role' => 'owner']);
+            if (WorkspaceAccounts::appliesTo($team)) {
+                CreateWorkspaceAccount::dispatch($team)->afterCommit();
+            }
             app(Credits::class)->grantMonthly($team->setRelation('plan', $plan));
 
             return $team;

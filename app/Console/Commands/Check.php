@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Google\BigQuery;
 use App\Google\Credentials;
 use App\Google\SearchConsole;
+use App\Google\WorkspaceAccounts;
 use Illuminate\Console\Command;
 use Throwable;
 
@@ -46,6 +47,11 @@ class Check extends Command
                 $ok = false;
                 $this->error('BigQuery: '.$e->getMessage());
             }
+        }
+
+        if (config('gsctool.registration') && ! WorkspaceAccounts::enabled()) {
+            $ok = false;
+            $this->error('Sign-ups are on but GOOGLE_WORKSPACE_ACCOUNTS is off: every workspace would share one Google account, so one customer could read a site another customer granted.');
         }
 
         foreach (['dom', 'mbstring', 'openssl', 'curl', 'pdo_mysql', 'intl'] as $ext) {

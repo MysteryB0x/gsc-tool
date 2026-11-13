@@ -17,6 +17,10 @@ class Sync extends Command
         $properties = Property::where('is_active', true)->where('has_access', true)
             ->when($this->option('property'), fn ($q, $id) => $q->whereKey($id))->get();
 
+        // GA4-only properties (no Search Console access yet) still get their GA4 sync.
+        Property::where('is_active', true)->where('has_access', false)->whereNotNull('ga4_property_id')
+            ->when($this->option('property'), fn ($q, $id) => $q->whereKey($id))->each(fn ($p) => $planner->ga4($p));
+
         foreach ($properties as $property) {
             $this->option('backfill') ? $planner->backfill($property) : $planner->daily($property);
             $this->line("Queued: {$property->name}");

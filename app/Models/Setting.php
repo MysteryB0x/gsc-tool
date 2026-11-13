@@ -18,9 +18,17 @@ class Setting extends Model
 
     public static function get(string $key, mixed $default = null): mixed
     {
-        $all = Cache::rememberForever('settings', fn () => static::query()->pluck('value', 'key')->all());
+        return static::all_()[$key] ?? $default;
+    }
 
-        return $all[$key] ?? $default;
+    /** Every setting as key => value. Empty (defaults everywhere) before the first migration. */
+    public static function all_(): array
+    {
+        try {
+            return Cache::rememberForever('settings', fn () => static::query()->pluck('value', 'key')->all());
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public static function put(string $key, mixed $value): void

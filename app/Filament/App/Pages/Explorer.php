@@ -58,7 +58,9 @@ class Explorer extends Page implements HasTable
     {
         $end = now()->subDays(3);
         $this->form->fill([
-            'dimensions' => ['query'],
+            'query_contains' => request()->query('query'),
+            'url_contains' => request()->query('page'),
+            'dimensions' => request()->query('query') ? ['query', 'url'] : ['query'],
             'from' => $end->copy()->subDays(27)->toDateString(),
             'to' => $end->toDateString(),
             'sort' => 'clicks',

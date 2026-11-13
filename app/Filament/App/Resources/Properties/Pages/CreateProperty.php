@@ -13,8 +13,13 @@ class CreateProperty extends CreateRecord
     /** New property: check access, then start the 16-month backfill in the background. */
     protected function afterCreate(): void
     {
-        if (PropertyResource::checkAccess($this->record)) {
-            app(SyncPlanner::class)->backfill($this->record);
+        $gsc = PropertyResource::checkAccess($this->record);
+        $ga4 = filled($this->record->ga4_property_id) && PropertyResource::checkGa4($this->record);
+
+        if ($gsc) {
+            app(SyncPlanner::class)->backfill($this->record);   // also queues GA4
+        } elseif ($ga4) {
+            app(SyncPlanner::class)->ga4($this->record);
         }
     }
 }

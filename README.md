@@ -1,6 +1,6 @@
 # GSC Tool
 
-Search Console analytics on BigQuery: content decay, cannibalisation, striking-distance keywords, CTR benchmark, an Explorer on the raw data, and actions you can mark done and see on the trend. Laravel 13 + Filament 5, built to run on shared hosting.
+Search Console analytics on BigQuery: content decay, cannibalisation, striking-distance keywords, CTR benchmark, one ranked opportunity inbox, an Explorer on the raw data, GA4 next to it (sessions, key events, visits from AI assistants), daily and weekly alerts for big changes, and actions you can mark done and see on the trend. Laravel 13 + Filament 5, built to run on shared hosting.
 
 The name is a setting (`APP_NAME` / `GSCT_NAME` in `.env`), so rebranding needs no code change.
 

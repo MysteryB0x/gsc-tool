@@ -7,6 +7,7 @@ use App\Models\Property;
 use App\Models\Reports\CannibalisationRow;
 use App\Models\Reports\CtrRow;
 use App\Models\Reports\DecayRow;
+use App\Models\Reports\PageRow;
 use App\Models\Reports\StrikingRow;
 use App\Search\QueryRunner;
 use Carbon\CarbonImmutable;
@@ -32,6 +33,7 @@ class ReportBuilder
         $this->dailyTotals($property, $end);
         $this->decay($property, $end);
         $this->cannibalisationAndOpportunities($property, $end);
+        $this->pages($property, $end);
 
         $property->update(['reports_built_at' => now()]);
     }
@@ -145,6 +147,23 @@ class ReportBuilder
         usort($ctr, fn ($a, $b) => $b['missed_clicks'] <=> $a['missed_clicks']);
         $this->replace(StrikingRow::class, $property, array_slice($striking, 0, 2000));
         $this->replace(CtrRow::class, $property, array_slice($ctr, 0, 2000));
+    }
+
+    public function pages(Property $property, CarbonImmutable $end): void
+    {
+        $rows = $this->run($property, Sql::pageTotals($property, $end->toDateString()), 'pages');
+
+        $this->replace(PageRow::class, $property, array_map(fn ($r) => [
+            'property_id' => $property->id,
+            'url' => mb_substr((string) $r['url'], 0, 2048),
+            'path' => mb_substr(parse_url((string) $r['url'], PHP_URL_PATH) ?: '/', 0, 1024),
+            'clicks_7' => (int) $r['clicks_7'],
+            'clicks_prev_7' => (int) $r['clicks_prev_7'],
+            'clicks_28' => (int) $r['clicks_28'],
+            'clicks_prev_28' => (int) $r['clicks_prev_28'],
+            'impressions_28' => (int) $r['impressions_28'],
+            'position_28' => round((float) $r['position_28'], 3),
+        ], $rows));
     }
 
     /** @param class-string<Model> $model */

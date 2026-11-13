@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\DateOnly;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,7 +15,7 @@ class SeoAction extends Model
 
     protected function casts(): array
     {
-        return ['done_on' => 'date', 'team_id' => 'integer', 'property_id' => 'integer', 'user_id' => 'integer'];
+        return ['done_on' => DateOnly::class, 'team_id' => 'integer', 'property_id' => 'integer', 'user_id' => 'integer'];
     }
 
     protected static function booted(): void

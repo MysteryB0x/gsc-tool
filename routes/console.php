@@ -16,6 +16,10 @@ Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3 --timeou
 // Nightly: the last few days from Search Console into BigQuery, then the reports.
 Schedule::command('gsc:sync')->dailyAt('04:30')->timezone(config('gsctool.timezone'))->withoutOverlapping();
 
+// Change alerts, after the nightly sync and reports (only sent when something big changed).
+Schedule::command('alerts:send daily')->dailyAt('07:30')->timezone(config('gsctool.timezone'));
+Schedule::command('alerts:send weekly')->weeklyOn(1, '07:45')->timezone(config('gsctool.timezone'));
+
 // Plan credits, once per period.
 Artisan::command('credits:grant', function (Credits $credits) {
     $n = 0;

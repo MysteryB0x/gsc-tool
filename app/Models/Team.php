@@ -24,6 +24,8 @@ class Team extends Model
             'trial_ends_at' => 'datetime',
             'current_period_ends_at' => 'datetime',
             'credits_granted_at' => 'datetime',
+            'uses_app_account' => 'boolean',
+            'may_share_properties' => 'boolean',
         ];
     }
 

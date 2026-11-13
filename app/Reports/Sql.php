@@ -55,6 +55,27 @@ WHERE url IN (SELECT url FROM m GROUP BY url HAVING MAX(clicks) >= {$minClicks})
 ORDER BY url, month";
     }
 
+    /** Clicks per URL: last 7 days vs the 7 before, last 28 vs the 28 before (window ends on $to). */
+    public static function pageTotals(Property $p, string $to): string
+    {
+        $t = Tables::urlImpression($p);
+        $end = self::date($to);
+        $w = Tables::where(date('Y-m-d', strtotime("$end -55 days")), $end);
+
+        return "SELECT url,
+  SUM(IF(data_date > DATE_SUB(DATE '{$end}', INTERVAL 7 DAY), clicks, 0)) AS clicks_7,
+  SUM(IF(data_date <= DATE_SUB(DATE '{$end}', INTERVAL 7 DAY) AND data_date > DATE_SUB(DATE '{$end}', INTERVAL 14 DAY), clicks, 0)) AS clicks_prev_7,
+  SUM(IF(data_date > DATE_SUB(DATE '{$end}', INTERVAL 28 DAY), clicks, 0)) AS clicks_28,
+  SUM(IF(data_date <= DATE_SUB(DATE '{$end}', INTERVAL 28 DAY), clicks, 0)) AS clicks_prev_28,
+  SUM(IF(data_date > DATE_SUB(DATE '{$end}', INTERVAL 28 DAY), impressions, 0)) AS impressions_28,
+  SAFE_DIVIDE(SUM(IF(data_date > DATE_SUB(DATE '{$end}', INTERVAL 28 DAY), sum_position, 0)), SUM(IF(data_date > DATE_SUB(DATE '{$end}', INTERVAL 28 DAY), impressions, 0))) + 1 AS position_28
+FROM {$t} WHERE {$w}
+GROUP BY url
+HAVING clicks_28 + clicks_prev_28 >= 5
+ORDER BY clicks_28 DESC
+LIMIT 20000";
+    }
+
     /** Queries where 2+ URLs each take at least $minShare of the impressions. */
     public static function cannibalisation(Property $p, string $from, string $to, float $minShare, int $minImpressions): string
     {

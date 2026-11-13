@@ -14,7 +14,8 @@ return [
     'slug' => env('GSCT_SLUG', 'gsc-tool'),
 
     // Primary colour of both panels.
-    'primary_color' => env('GSCT_PRIMARY_COLOR', '#2563EB'),
+    // Default primary colour; Admin → Branding overrides it (and the rest of the look).
+    'primary_color' => env('GSCT_PRIMARY_COLOR', '#BA5A00'),
 
     // Sign-ups. Off while the tool is only for the owner; switch on when paid plans go live.
     'registration' => (bool) env('GSCT_REGISTRATION', false),
@@ -36,6 +37,10 @@ return [
     'google' => [
         // Service-account key file (JSON), stored outside the web root. Relative paths are read from the app folder.
         'credentials' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+
+        // Give every workspace its own Google service account (impersonated, no extra keys), so access
+        // granted in Search Console/GA4 only reaches that workspace. Switch on before opening sign-ups.
+        'workspace_accounts' => (bool) env('GOOGLE_WORKSPACE_ACCOUNTS', false),
 
         // OAuth is built in but switched off: service accounts only for now.
         'oauth_enabled' => (bool) env('GOOGLE_OAUTH_ENABLED', false),
@@ -74,6 +79,11 @@ return [
         // Fixed credits per paid third-party call (phase 3).
         'ai_brief' => 5,
         'serp_context' => 2,
+    ],
+
+    'ga4' => [
+        // GA4 session sources counted as AI assistants (a regex, matched anywhere in the source, any case).
+        'ai_sources' => env('GA4_AI_SOURCES', 'chatgpt\\.com|chat\\.openai\\.com|openai\\.com|perplexity\\.ai|gemini\\.google\\.com|bard\\.google\\.com|copilot\\.microsoft\\.com|claude\\.ai|deepseek\\.com|grok\\.com|meta\\.ai|you\\.com|poe\\.com|mistral\\.ai'),
     ],
 
     'sync' => [

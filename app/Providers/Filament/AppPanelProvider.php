@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\App\Pages\Dashboard;
 use App\Filament\App\Pages\Tenancy\RegisterTeam;
 use App\Models\Team;
+use App\Support\Branding;
 use App\Support\TwoFactor;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -13,12 +14,13 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /** /app — the tool itself, one workspace (team) per URL slug. */
@@ -34,10 +36,17 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile(isSimple: false)
             ->globalSearch(false)
-            ->brandName(fn () => config('gsctool.name'))
-            ->colors(['primary' => Color::hex(config('gsctool.primary_color')), 'gray' => Color::Slate])
-            ->font('Inter')
+            ->brandName(fn () => Branding::name())
+            ->brandLogo(fn () => Branding::logoUrl())
+            ->darkModeBrandLogo(fn () => Branding::assetUrl('logo_dark') ?? Branding::assetUrl('logo'))
+            ->brandLogoHeight(fn () => Branding::get('logo_height') ?: '2rem')
+            ->favicon(fn () => Branding::assetUrl('favicon'))
+            ->colors(fn () => Branding::colors())
+            ->font(fn () => Branding::font())
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => new HtmlString('<style>'.Branding::css().'</style>'))
             ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('60s')
             ->tenant(Team::class, slugAttribute: 'slug')
             ->tenantRegistration(RegisterTeam::class)
             ->tenantMenu(fn () => (auth()->user()?->teams()->count() ?? 0) > 1)

@@ -2,9 +2,13 @@
 
 namespace App\Filament\App\Resources\Properties;
 
+use App\Google\AnalyticsData;
 use App\Google\Credentials;
 use App\Google\SearchConsole;
+use App\Google\WorkspaceAccounts;
 use App\Models\Property;
+use App\Models\Team;
+use App\Search\SiteKey;
 use App\Search\SyncPlanner;
 use App\Services\PlanLimits;
 use BackedEnum;
@@ -35,13 +39,18 @@ class PropertyResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    public static function serviceAccountHint(): string
+    public static function serviceAccountHint(?Team $team = null): string
     {
-        $email = app(Credentials::class)->app()->identity();
+        $team ??= Filament::getTenant();
+        $email = $team ? app(Credentials::class)->identityFor($team) : app(Credentials::class)->app()->identity();
 
-        return $email
-            ? "In Search Console, add {$email} as a user (Restricted is enough) to each property."
-            : 'The service account is not set up yet (GOOGLE_SERVICE_ACCOUNT_JSON).';
+        if ($email) {
+            return "Add {$email} as a user in Search Console (Restricted is enough) and as a Viewer in GA4. This email belongs to this workspace only.";
+        }
+
+        return $team && WorkspaceAccounts::appliesTo($team)
+            ? 'This workspace\'s Google account is being created. Its email shows here in a minute.'
+            : 'The Google service account is not set up yet (GOOGLE_SERVICE_ACCOUNT_JSON).';
     }
 
     public static function canCreate(): bool
@@ -56,7 +65,12 @@ class PropertyResource extends Resource
                 TextInput::make('name')->required()->maxLength(100)->placeholder('Outlet Kantoormeubels'),
                 TextInput::make('site_url')->label('Search Console property')->required()->maxLength(255)
                     ->placeholder('sc-domain:example.nl or https://www.example.nl/')
-                    ->helperText('Exactly as Search Console shows it. Domain properties start with sc-domain:.'),
+                    ->helperText('Exactly as Search Console shows it. Domain properties start with sc-domain:.')
+                    ->rule(fn (?Property $record) => function (string $attribute, $value, \Closure $fail) use ($record) {
+                        if ($other = SiteKey::takenBy((string) $value, Filament::getTenant(), $record?->id)) {
+                            $fail('This site is already connected to another workspace. Contact support if it should be in both.');
+                        }
+                    }),
                 Radio::make('source')->label('Data source')->default('api')->live()->required()
                     ->options([
                         'api' => 'Search Console API (works with any access, row-limited for big sites)',
@@ -66,6 +80,10 @@ class PropertyResource extends Resource
                 TextInput::make('bq_dataset')->label('Bulk Export dataset')->default('searchconsole')
                     ->visible(fn (Get $get) => $get('source') === 'bulk')->required(fn (Get $get) => $get('source') === 'bulk')
                     ->helperText('Search Console → Settings → Bulk data export, with this app\'s BigQuery project. The dataset name it creates.'),
+                TextInput::make('ga4_property_id')->label('GA4 property ID (optional)')->maxLength(20)->regex('/^(properties\/)?\d{6,12}$/')
+                    ->dehydrateStateUsing(fn (?string $state) => $state ? AnalyticsData::normalizeId($state) : null)
+                    ->placeholder('123456789')
+                    ->helperText('GA4 → Admin → Property details → Property ID (numbers only). Add the email above as a Viewer in that property.'),
                 Toggle::make('is_active')->label('Active (synced and reported nightly)')->default(true),
             ]),
         ]);
@@ -81,12 +99,17 @@ class PropertyResource extends Resource
                 TextColumn::make('source')->badge()->formatStateUsing(fn ($state) => $state === 'bulk' ? 'Full data' : 'API'),
                 IconColumn::make('has_access')->label('Access')->boolean(),
                 TextColumn::make('synced_until')->label('Data until')->date('j M Y')->placeholder('—'),
+                TextColumn::make('ga4_property_id')->label('GA4')->placeholder('—')
+                    ->color(fn (Property $r) => $r->ga4_error ? 'danger' : null)->tooltip(fn (Property $r) => $r->ga4_error),
                 TextColumn::make('reports_built_at')->label('Reports')->since()->placeholder('not yet'),
                 TextColumn::make('last_error')->label('Last error')->limit(40)->color('danger')->tooltip(fn ($record) => $record->last_error),
             ])
             ->recordActions([
                 Action::make('checkAccess')->label('Check access')->icon(Heroicon::OutlinedShieldCheck)->color('gray')
                     ->action(fn (Property $record) => static::checkAccess($record)),
+                Action::make('checkGa4')->label('Check GA4')->icon(Heroicon::OutlinedChartBar)->color('gray')
+                    ->visible(fn (Property $record) => filled($record->ga4_property_id))
+                    ->action(fn (Property $record) => static::checkGa4($record)),
                 Action::make('sync')->label('Sync now')->icon(Heroicon::OutlinedArrowPath)->color('gray')
                     ->requiresConfirmation()
                     ->modalDescription('Fetches the latest days (or the full 16 months on the first sync) and rebuilds the reports in the background.')
@@ -96,6 +119,22 @@ class PropertyResource extends Resource
                     }),
                 EditAction::make(),
             ]);
+    }
+
+    public static function checkGa4(Property $property, bool $notify = true): bool
+    {
+        try {
+            $problem = (new AnalyticsData(app(Credentials::class)->forProperty($property)))->accessProblem($property->ga4_property_id);
+        } catch (Throwable $e) {
+            $problem = $e->getMessage();
+        }
+        $property->update(['ga4_has_access' => $problem === null, 'ga4_error' => $problem ? 'GA4: '.$problem : null]);
+
+        if ($notify) {
+            Notification::make()->title($problem ? 'No GA4 access yet' : 'GA4 access confirmed')->body($problem)->color($problem ? 'warning' : 'success')->send();
+        }
+
+        return $problem === null;
     }
 
     /** Can the service account read this property? Fixes the format (sc-domain ↔ URL) when Google lists the other one. */
@@ -111,7 +150,7 @@ class PropertyResource extends Resource
                     $property->site_url = $found;
                 }
             }
-            $property->fill(['has_access' => $ok, 'access_checked_at' => now(), 'last_error' => $ok ? null : 'No access: '.static::serviceAccountHint()])->save();
+            $property->fill(['has_access' => $ok, 'access_checked_at' => now(), 'last_error' => $ok ? null : 'No access: '.static::serviceAccountHint($property->team)])->save();
         } catch (Throwable $e) {
             $ok = false;
             $property->update(['has_access' => false, 'access_checked_at' => now(), 'last_error' => $e->getMessage()]);

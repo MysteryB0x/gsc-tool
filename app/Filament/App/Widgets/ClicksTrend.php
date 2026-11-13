@@ -4,6 +4,7 @@ namespace App\Filament\App\Widgets;
 
 use App\Models\DailyTotal;
 use App\Models\SeoAction;
+use App\Support\Branding;
 use App\Support\CurrentProperty;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
@@ -53,7 +54,7 @@ class ClicksTrend extends ChartWidget
         return [
             'labels' => $labels,
             'datasets' => [
-                ['label' => 'Clicks', 'data' => $weeks->pluck('clicks')->values()->all(), 'borderColor' => config('gsctool.primary_color'), 'backgroundColor' => config('gsctool.primary_color'), 'yAxisID' => 'y', 'tension' => 0.25, 'pointRadius' => 0],
+                ['label' => 'Clicks', 'data' => $weeks->pluck('clicks')->values()->all(), 'borderColor' => Branding::hex('primary_color', '#BA5A00'), 'backgroundColor' => Branding::hex('primary_color', '#BA5A00'), 'yAxisID' => 'y', 'tension' => 0.25, 'pointRadius' => 0],
                 ['label' => 'Impressions', 'data' => $weeks->pluck('impressions')->values()->all(), 'borderColor' => '#94a3b8', 'backgroundColor' => '#94a3b8', 'yAxisID' => 'y1', 'tension' => 0.25, 'pointRadius' => 0, 'borderDash' => [4, 4]],
                 ['label' => 'Actions done', 'data' => $weeks->map(fn ($v, $w) => $actions->has($w) ? $v['clicks'] : null)->values()->all(),
                     'yAxisID' => 'y', 'showLine' => false, 'pointStyle' => 'triangle', 'pointRadius' => 8, 'borderColor' => '#16a34a', 'backgroundColor' => '#16a34a'],

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\DateOnly;
+use App\Search\SiteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,11 +27,18 @@ class Property extends Model
             'has_access' => 'boolean',
             'is_active' => 'boolean',
             'access_checked_at' => 'datetime',
-            'synced_until' => 'date',
-            'backfilled_from' => 'date',
+            'synced_until' => DateOnly::class,
+            'backfilled_from' => DateOnly::class,
             'last_synced_at' => 'datetime',
             'reports_built_at' => 'datetime',
+            'ga4_has_access' => 'boolean',
+            'ga4_synced_until' => DateOnly::class,
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(fn (Property $p) => $p->site_key = SiteKey::of($p->site_url));
     }
 
     public function team(): BelongsTo
