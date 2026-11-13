@@ -29,7 +29,7 @@ php artisan app:install          # your admin account + workspace
 php artisan serve                # http://localhost:8000/app
 ```
 
-Google setup and production hosting (Vimexx/DirectAdmin) are in [docs/setup.md](docs/setup.md).
+**Installing on Vimexx:** follow [INSTALL.md](INSTALL.md) step by step. Background and other options: [docs/setup.md](docs/setup.md).
 
 ## Tests
 

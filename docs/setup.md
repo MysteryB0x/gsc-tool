@@ -1,5 +1,7 @@
 # GSC Tool — setup
 
+The step-by-step install on Vimexx is [INSTALL.md](../INSTALL.md); this page explains each part.
+
 ## 1. Google Cloud (once)
 
 Use one Google Cloud project for the tool. Replace `PROJECT_ID`.

@@ -26,7 +26,7 @@ The name is configuration: `APP_NAME` / `GSCT_NAME` in `.env` (`config/gsctool.p
 - API-synced tables mirror Google's Bulk Export `searchdata_url_impression` columns, so the same SQL runs on both. Position = `SUM(sum_position) / SUM(impressions) + 1`.
 - Customer-owned tables have `team_id` or hang off a property that has one; Filament scopes by tenant.
 - Admin actions that change money or access are written to `audit_logs` (`AuditLog::record`).
-- Hosting changes go into `docs/setup.md` in the same commit.
+- Hosting changes go into `INSTALL.md` (the step-by-step Vimexx install) and `docs/setup.md` in the same commit.
 - Calendar days use the `App\Casts\DateOnly` cast (stored `Y-m-d`), never Laravel's `date` cast.
 - Google access for customers goes through `Credentials::forProperty()`: never the app's account for a workspace without `uses_app_account` when workspace accounts are on.
 - English UI only.
